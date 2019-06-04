@@ -13,8 +13,12 @@ import org.springframework.stereotype.Service;
 @Service
 public abstract class AddressService implements IAddressService {
 
-    private Address addressRepo;
-
+    private ArrayList<Address> addressRepo = new ArrayList<Address>();
+    Path path = Paths.get("C:\"Users\"j96179\"dev\"RubberDuckieSandbox\"SpringBootDemo\"SpringBootDemo\"SpringBootDemo\"src\"main\"resources\"output.txt");
+    
+    private static FileWriter path;
+    private static BufferedWriter writer;
+    
     @Override
     public List<Address> findAll() {
 
@@ -29,28 +33,86 @@ public abstract class AddressService implements IAddressService {
         addresses.add(new Address(7L, "Sonya Lutze", "151 S Canal", "Newark", "IL", 60541));
         addresses.add(new Address(8L, "Steve Roberts", "5805 Davis Rd", "Waxhaw", "NC", 28173));
 
-        Files.write(Paths.get("com/SpringBootDemo/output/output.txt"), addresses.getBytes());
-
+        try (BufferedWriter writer = Files.newBufferedWriter(path)){
+    		writer.write(addresses);
+    	} catch (IOException e){
+    		System.err.println("couldn't create output file");
+    	}
         return addresses;
     }
 
     @Override
     public void createAddress(String name, String address, String city, String state, int zip){
         long id = addressRepo.getId() +1;
-        addressRepo.put(id, name, address, city, state, zip);
+        ArrayList<Address> address = new ArrayList<Address>();
+        
+        try {
+	        BufferedReader reader = new BufferedReader(new FileReader(path));
+	        while (reader.ready()) {
+	        	String input = reader.readLine();
+	        	address.add(input);
+	        }
+	        reader.close();
+	        address.add(id, name, address, city, state, zip);
+        }
+        catch (IOException io) {
+        	System.err.pringln("error in \"createAddress\"");
+        }
+        
+        try(BufferedWriter writer = Files.newBufferedWriter(path)) {
+        	writer.write(address);
+        }
     };
+    
 
     @Override
     public void updateAddress(Long id, String name, String address, String city, String state, int zip) {
-        addressRepo.remove(id);
-        addressRepo.setId(id);
-        addressRepo.put(id, name, address, city, state, zip);
+        ArrayList<Address> address = new ArrayList<Address>();
+        
+        try {
+	        BufferedReader reader = new BufferedReader(new FileReader(path));
+	        while (reader.ready()) {
+	        	String input = reader.readLine();
+	        	if (input[0] == id) {
+	        		input[1] = name;
+	        		input[2] = address;
+	        		input[3] = city;
+	        		input[4] = state;
+	        		input[5] = zip;
+	        	}
+	        	address.add(input);
+	        }
+	        reader.close();
+        }
+        catch (IOException io) {
+        	System.err.pringln("error in \"updateAddress\"");
+        }
+        
+        try(BufferedWriter writer = Files.newBufferedWriter(path)) {
+        	writer.write(address);
+        }
     }
 
     @Override
     public void deleteAddress(Long id){
-        addressRepo.remove(id);
+        ArrayList<Address> address = new ArrayList<Address>();
+        
+        try {
+	        BufferedReader reader = new BufferedReader(new FileReader(path));
+	        while (reader.ready()) {
+	        	String input = reader.readLine();
+	        	if (input[0] != id) {
+	        		address.add(input);
+	        	}
+	        }
+	        reader.close();
+        }
+        catch (IOException io) {
+        	System.err.pringln("error in \"deleteAddress\"");
+        }
+        
+        try(BufferedWriter writer = Files.newBufferedWriter(path)) {
+        	writer.write(address);
+        }
     };
-
-
 }
